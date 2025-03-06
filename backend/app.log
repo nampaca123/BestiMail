@@ -1,0 +1,92 @@
+Cache hit for word 'e': e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+Completed grammar correction. Final text: , e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+[Handler] Sending correction: ', e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,'
+[Handler] Received grammar check request: {'text': ',e'}
+[Handler] Processing text: ',e'
+Starting grammar correction for text: ,e
+Performing new correction for token: ,
+AI correction result: , -> ,
+Cache hit for word 'e': e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+Completed grammar correction. Final text: , e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+[Handler] Sending correction: ', e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,'
+[Handler] Received grammar check request: {'text': ',e'}
+[Handler] Processing text: ',e'
+Starting grammar correction for text: ,e
+Performing new correction for token: ,
+AI correction result: , -> ,
+Cache hit for word 'e': e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+Completed grammar correction. Final text: , e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+[Handler] Sending correction: ', e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,'
+[Handler] Received grammar check request: {'text': ',e'}
+[Handler] Processing text: ',e'
+Starting grammar correction for text: ,e
+Performing new correction for token: ,
+AI correction result: , -> ,
+Cache hit for word 'e': e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+Completed grammar correction. Final text: , e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+[Handler] Sending correction: ', e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,'
+[Handler] Received grammar check request: {'text': ',e'}
+[Handler] Processing text: ',e'
+Starting grammar correction for text: ,e
+Performing new correction for token: ,
+AI correction result: , -> ,
+Cache hit for word 'e': e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+Completed grammar correction. Final text: , e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,
+[Handler] Sending correction: ', e.g., e.g., e.g., e.g., e.g., e.g., e.g., e.g.,'
+[Handler] Received grammar check request: {'text': '..'}
+[Handler] Processing text: '..'
+Starting grammar correction for text: ..
+Performing new correction for token: .
+AI correction result: . -> .
+Performing new correction for token: .
+AI correction result: . -> .
+Completed grammar correction. Final text: . .
+[Handler] Sending correction: '. .'
+[Handler] Received grammar check request: {'text': '.'}
+[Handler] Processing text: '.'
+Starting grammar correction for text: .
+Performing new correction for token: .
+AI correction result: . -> .
+Completed grammar correction. Final text: .
+[Handler] Sending correction: '.'
+[Handler] Received grammar check request: {'text': '.I'}
+[Handler] Processing text: '.I'
+Starting grammar correction for text: .I
+Performing new correction for token: .
+AI correction result: . -> .
+Cache hit for word 'I': I'm not sure what I'm doing wrong.
+Completed grammar correction. Final text: . I'm not sure what I'm doing wrong.
+[Handler] Sending correction: '. I'm not sure what I'm doing wrong.'
+[Handler] Received grammar check request: {'text': '.'}
+[Handler] Processing text: '.'
+Starting grammar correction for text: .
+Performing new correction for token: .
+AI correction result: . -> .
+Completed grammar correction. Final text: .
+[Handler] Sending correction: '.'
+[Handler] Received grammar check request: {'text': '.,'}
+[Handler] Processing text: '.,'
+Starting grammar correction for text: .,
+Performing new correction for token: .
+AI correction result: . -> .
+Performing new correction for token: ,
+AI correction result: , -> ,
+Completed grammar correction. Final text: . ,
+[Handler] Sending correction: '. ,'
+[Handler] Received grammar check request: {'text': '.'}
+[Handler] Processing text: '.'
+Starting grammar correction for text: .
+Performing new correction for token: .
+AI correction result: . -> .
+Completed grammar correction. Final text: .
+[Handler] Sending correction: '.'
+BestiMail startup
+Initializing GrammarService...
+GrammarService initialized successfully
+BestiMail startup
+BestiMail startup
+Initializing GrammarService...
+GrammarService initialized successfully
+BestiMail startup
+Initializing GrammarService...
+GrammarService initialized successfully

@@ -1,29 +1,48 @@
 from flask_socketio import emit
-from app import redis_client
 from app.services.grammar_service import GrammarService
 from app.services.openai_service import OpenAIService
 
-grammar_service = GrammarService(redis_client)
+grammar_service = GrammarService()
 openai_service = OpenAIService()
 
-def handle_grammar_check(data):
-    """
-    실시간 문법 교정을 처리하는 핸들러
-    """
-    text = data.get('text', '')
-    corrected_text = grammar_service.correct_grammar(text)
-    emit('grammar_result', {'corrected_text': corrected_text})
+def init_handlers(socketio):
+    @socketio.on('connect')
+    def handle_connect():
+        print('Client connected')
 
-def handle_connect():
-    """
-    웹소켓 연결 시 처리하는 핸들러
-    """
-    emit('connected', {'data': 'Connected to grammar service'})
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        print('Client disconnected')
 
-def handle_formalize(data):
-    """
-    OpenAI를 사용해 이메일을 공식적인 톤으로 변환
-    """
-    text = data.get('text', '')
-    formalized_text = openai_service.formalize_text(text)  # OpenAI 서비스 필요
-    emit('formalize_result', {'formalized_text': formalized_text}) 
+    @socketio.on('check_grammar')
+    def handle_grammar_check(data):
+        """
+        실시간 문법 교정을 처리하는 핸들러
+        """
+        from flask import current_app
+        
+        current_app.logger.info("=== Grammar check request received ===")
+        text = data.get('text', '')
+        current_app.logger.info(f"[Handler] Processing text: '{text}'")
+        
+        if not text.strip():
+            current_app.logger.warning("[Handler] Empty text received")
+            emit('grammar_result', {'corrected_text': text})
+            return
+        
+        try:
+            corrected_text = grammar_service.correct_grammar(text)
+            current_app.logger.info(f"[Handler] Sending correction: '{corrected_text}'")
+            emit('grammar_result', {'corrected_text': corrected_text})
+        except Exception as e:
+            current_app.logger.error(f"[Handler] Error during grammar correction: {str(e)}")
+            emit('error', {'message': str(e)})
+
+    @socketio.on('formalize')
+    def handle_formalize(data):
+        """
+        OpenAI를 사용해 이메일을 공식적인 톤으로 변환
+        """
+        text = data.get('text', '')
+        formalized = openai_service.formalize_text(text)
+        emit('formalize_result', {'formalized_text': formalized}) 

@@ -5,3 +5,5 @@ happytransformer
 python-dotenv
 sendgrid
 openai
+flask-cors
+eventlet

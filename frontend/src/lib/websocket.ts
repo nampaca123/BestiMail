@@ -21,10 +21,28 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:5000');
+    console.log('Attempting WebSocket connection...');
+    const socketInstance = io('http://localhost:5001', {
+      transports: ['websocket', 'polling'],
+      withCredentials: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
 
-    socketInstance.on('connect', () => setIsConnected(true));
-    socketInstance.on('disconnect', () => setIsConnected(false));
+    socketInstance.on('connect', () => {
+      console.log('WebSocket connected successfully');
+      setIsConnected(true);
+    });
+
+    socketInstance.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+    });
+
+    socketInstance.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
 
     setSocket(socketInstance);
     return () => { socketInstance.disconnect(); };
