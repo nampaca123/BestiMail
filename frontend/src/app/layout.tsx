@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { GeistSans } from 'geist/font/sans'
 import "./globals.css";
-import { WebSocketProvider } from '@/lib/websocket';
 
 const geist = GeistSans
 
 export const metadata: Metadata = {
-  title: "Bestia - AI Email Assistant",
+  title: "BestiMail",
   description: "Write better emails with AI assistance",
 };
 
@@ -24,9 +23,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geist.className} antialiased bg-gray-50`}>
-        <WebSocketProvider>
-          {children}
-        </WebSocketProvider>
+        {children}
       </body>
     </html>
   );

@@ -1,11 +1,6 @@
 'use client';
 
-interface ActionButtonProps {
-  icon: string;
-  children: React.ReactNode;
-  variant?: 'primary' | 'secondary';
-  onClick?: () => void;
-}
+import { ActionButtonProps } from '@/types/email';
 
 const ActionButton = ({ icon, children, variant = 'secondary', onClick }: ActionButtonProps) => (
   <button

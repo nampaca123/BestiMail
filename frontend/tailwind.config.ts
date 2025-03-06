@@ -30,6 +30,26 @@ const config: Config = {
         DEFAULT: {
           css: {
             maxWidth: 'none',
+            p: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            '[class~="lead"]': {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            blockquote: {
+              marginTop: '0.75em',
+              marginBottom: '0.75em',
+            },
+            ul: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            ol: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
           },
         },
       },

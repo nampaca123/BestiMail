@@ -1,5 +1,10 @@
 import EmailContainer from '@/components/editor/EmailContainer';
+import { WebSocketProvider } from '@/lib/websocket';
 
 export default function Home() {
-  return <EmailContainer />;
+  return (
+    <WebSocketProvider>
+      <EmailContainer />
+    </WebSocketProvider>
+  );
 }

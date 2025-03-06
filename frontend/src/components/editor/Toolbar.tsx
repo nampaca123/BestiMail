@@ -1,12 +1,7 @@
 'use client';
 
-import { Editor } from '@tiptap/react';
-
-interface ToolbarButtonProps {
-  icon: string;
-  command: () => void;
-  isActive?: boolean;
-}
+import { useRef, ChangeEvent } from 'react';
+import { ToolbarProps, ToolbarButtonProps } from '@/types/email';
 
 const ToolbarButton = ({ icon, command, isActive }: ToolbarButtonProps) => (
   <button
@@ -25,11 +20,32 @@ const ToolbarGroup = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-interface ToolbarProps {
-  editor: Editor | null;
-}
+export default function Toolbar({ editor, onAttachFiles, onAttachImages }: ToolbarProps) {
+  const attachFileInput = useRef<HTMLInputElement>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
 
-export default function Toolbar({ editor }: ToolbarProps) {
+  const handleAttachClick = () => {
+    attachFileInput.current?.click();
+  };
+
+  const handleImageClick = () => {
+    imageInput.current?.click();
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && onAttachFiles) {
+      onAttachFiles(files);
+    }
+  };
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && onAttachImages) {
+      onAttachImages(files);
+    }
+  };
+
   if (!editor) return null;
 
   return (
@@ -84,11 +100,33 @@ export default function Toolbar({ editor }: ToolbarProps) {
       </ToolbarGroup>
       
       <ToolbarGroup>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:bg-secondary rounded transition-colors">
+        <input
+          type="file"
+          ref={attachFileInput}
+          onChange={handleFileChange}
+          className="hidden"
+          multiple
+        />
+        <button 
+          onClick={handleAttachClick}
+          className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:bg-secondary rounded transition-colors"
+        >
           <span className="material-icons">attach_file</span>
           <span>Attach</span>
         </button>
-        <button className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:bg-secondary rounded transition-colors">
+
+        <input
+          type="file"
+          ref={imageInput}
+          onChange={handleImageChange}
+          accept="image/*"
+          className="hidden"
+          multiple
+        />
+        <button 
+          onClick={handleImageClick}
+          className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:bg-secondary rounded transition-colors"
+        >
           <span className="material-icons">image</span>
           <span>Images</span>
         </button>

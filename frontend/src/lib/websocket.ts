@@ -2,17 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, createElement, type ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
-
-// WebSocket 상태와 메서드들을 위한 타입
-interface WebSocketState {
-  socket: Socket | null;
-  isConnected: boolean;
-  isLoading: boolean;
-  // 이메일 관련 WebSocket 메서드들
-  checkGrammar: (text: string) => Promise<string>;
-  formalizeText: (text: string) => Promise<string>;
-  sendEmail: (to: string, subject: string, content: string) => Promise<boolean>;
-}
+import { WebSocketState } from '@/types/websocketInterface';
 
 // Context 생성
 const WebSocketContext = createContext<WebSocketState>({
