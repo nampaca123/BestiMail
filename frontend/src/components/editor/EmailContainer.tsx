@@ -15,9 +15,13 @@ export default function EmailContainer() {
   
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: {},
+        orderedList: {},
+        listItem: {},
+      }),
       TextAlign.configure({
-        types: ['paragraph', 'heading', 'bulletList', 'orderedList', 'listItem'],
+        types: ['paragraph', 'heading'],
         alignments: ['left', 'center', 'right'],
       }),
       Underline,
@@ -27,6 +31,12 @@ export default function EmailContainer() {
       const html = editor.getHTML();
       setContent(html);
     },
+    editorProps: {
+      attributes: {
+        class: 'prose-sm w-full max-w-none [&_ol]:list-decimal [&_ul]:list-disc focus:outline-none',
+      },
+    },
+    immediatelyRender: false,
   });
   
   return (

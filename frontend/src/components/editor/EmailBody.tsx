@@ -13,7 +13,7 @@ export default function EmailBody({ editor }: EmailBodyProps) {
     <div className="relative">
       <EditorContent 
         editor={editor} 
-        className="min-h-[300px] p-6 focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none"
+        className="min-h-[300px] p-6 prose max-w-none focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-none"
       />
       {!editor.getText() && (
         <div className="absolute top-6 left-6 pointer-events-none text-gray-400">

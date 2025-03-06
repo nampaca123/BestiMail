@@ -25,10 +25,19 @@ const config: Config = {
       },
       borderRadius: {
         'lg': '0.75rem',
-      }
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+          },
+        },
+      },
     }
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }
 
 export default config 
