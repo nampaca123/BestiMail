@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BestiMail - Smart Email Grammar Checker</title>
+    <link rel="stylesheet" href="assets/styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header__container">
+            <img src="assets/images/bestiaLogo.svg" alt="Bestia" class="header__logo">
+            <nav class="header__nav">
+                <button class="btn btn--secondary">Help</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="editor-container">
+            <div class="editor__controls">
+                <div class="editor__field">
+                    <div class="editor__label">To:</div>
+                    <div class="editor__input">
+                        <input type="email" class="input input--clean">
+                    </div>
+                </div>
+                <div class="editor__field">
+                    <div class="editor__label">Cc:</div>
+                    <div class="editor__input">
+                        <input type="email" class="input input--clean">
+                    </div>
+                </div>
+                <div class="editor__field">
+                    <div class="editor__label">Subject:</div>
+                    <div class="editor__input">
+                        <input type="text" class="input input--clean">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="editor__toolbar">
+                <div class="toolbar-group">
+                    <button class="btn btn--toolbar" data-command="bold">
+                        <span class="material-icons">format_bold</span>
+                    </button>
+                    <button class="btn btn--toolbar" data-command="italic">
+                        <span class="material-icons">format_italic</span>
+                    </button>
+                    <button class="btn btn--toolbar" data-command="underline">
+                        <span class="material-icons">format_underlined</span>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="btn btn--toolbar" data-command="justifyLeft">
+                        <span class="material-icons">format_align_left</span>
+                    </button>
+                    <button class="btn btn--toolbar" data-command="justifyCenter">
+                        <span class="material-icons">format_align_center</span>
+                    </button>
+                    <button class="btn btn--toolbar" data-command="justifyRight">
+                        <span class="material-icons">format_align_right</span>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="btn btn--toolbar" data-command="insertUnorderedList">
+                        <span class="material-icons">format_list_bulleted</span>
+                    </button>
+                    <button class="btn btn--toolbar" data-command="insertOrderedList">
+                        <span class="material-icons">format_list_numbered</span>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="btn btn--attachment">
+                        <span class="material-icons">attach_file</span>
+                        Attach
+                    </button>
+                    <button class="btn btn--attachment">
+                        <span class="material-icons">image</span>
+                        Images
+                    </button>
+                </div>
+            </div>
+            
+            <div class="editor__content" contenteditable="true" placeholder="Write your email here..."></div>
+
+            <div class="editor__actions">
+                <button class="btn btn--secondary btn--icon">
+                    <span class="material-icons">cancel</span>
+                    Cancel
+                </button>
+                <div class="action-group">
+                    <button class="btn btn--secondary btn--icon btn--overall-fix">
+                        <span class="material-icons">auto_fix_high</span>
+                        Overall Fix
+                    </button>
+                    <button class="btn btn--primary btn--icon">
+                        <span class="material-icons">send</span>
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="grammarToast"></div>
+
+    <script src="js/main.js" type="module"></script>
+</body>
+</html>
