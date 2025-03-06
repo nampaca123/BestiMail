@@ -31,8 +31,18 @@ def init_handlers(socketio):
             return
         
         try:
+            # 문법 교정 서비스 호출
             corrected_text = grammar_service.correct_grammar(text)
             current_app.logger.info(f"[Handler] Sending correction: '{corrected_text}'")
+            
+            # 교정 전후 단어 비교 로그 추가
+            original_words = text.split()
+            corrected_words = corrected_text.split()
+            
+            for i, (orig, corr) in enumerate(zip(original_words, corrected_words)):
+                if orig != corr:
+                    current_app.logger.info(f"[Handler] Word correction: '{orig}' -> '{corr}'")
+            
             emit('grammar_result', {'corrected_text': corrected_text})
         except Exception as e:
             current_app.logger.error(f"[Handler] Error during grammar correction: {str(e)}")

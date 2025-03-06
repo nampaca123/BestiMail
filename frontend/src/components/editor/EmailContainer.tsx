@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import EmailHeader from '@/components/editor/EmailHeader';
 import Toolbar from '@/components/editor/Toolbar';
 import EmailBody from '@/components/editor/EmailBody';
@@ -19,6 +19,12 @@ export default function EmailContainer() {
   const [content, setContent] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   
+  const lastSentenceRef = useRef<string>("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isCorrectingRef = useRef(false);
+  const lastCorrectionTimeRef = useRef<number>(0);
+  const correctedSentencesRef = useRef<Set<string>>(new Set());
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -40,62 +46,126 @@ export default function EmailContainer() {
     onUpdate: async ({ editor }) => {
       if (!editor) return;
       
+      if (isCorrectingRef.current) return;
+      
+      const now = Date.now();
+      if (now - lastCorrectionTimeRef.current < 1000) return;
+      
       const currentContent = editor.state.doc.textContent;
       const lastChar = currentContent[currentContent.length - 1];
       
-      // 문장 종료 부호를 입력했을 때만 교정 수행
       if (['.', '!', '?'].includes(lastChar)) {
-        console.log('[Editor] Detected sentence ending:', lastChar);
-        console.log('[Editor] Current content:', currentContent);
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
         
-        // 문장 분리 패턴 개선
-        const sentenceRegex = /([^.!?]+[.!?]+)/g;
-        const sentences = currentContent.match(sentenceRegex) || [];
-        console.log('[Editor] Detected sentences:', sentences);
-        
-        if (sentences.length > 0) {
-          // 마지막 문장 추출
-          const lastSentence = sentences[sentences.length - 1];
-          console.log('[Editor] Processing last sentence:', lastSentence);
+        debounceTimerRef.current = setTimeout(async () => {
+          if (isCorrectingRef.current) return;
           
-          try {
-            console.log('[Editor] Sending to server:', lastSentence);
-            const correctedSentence = await checkGrammar(lastSentence);
-            console.log('[Editor] Received from server:', correctedSentence);
+          const sentenceRegex = /[^.!?]+[.!?]$/;
+          const match = currentContent.match(sentenceRegex);
+          
+          if (match && match[0]) {
+            const lastSentence = match[0].trim();
             
-            if (correctedSentence !== lastSentence) {
-              // 마지막 문장의 위치 찾기
-              const sentencePos = currentContent.lastIndexOf(lastSentence);
-              const sentenceStart = sentencePos;
-              const sentenceEnd = sentencePos + lastSentence.length;
+            if (lastSentence === lastSentenceRef.current || 
+                correctedSentencesRef.current.has(lastSentence)) {
+              return;
+            }
+            
+            lastSentenceRef.current = lastSentence;
+            console.log('[Editor] Processing sentence:', lastSentence);
+            
+            try {
+              isCorrectingRef.current = true;
+              lastCorrectionTimeRef.current = Date.now();
               
-              console.log('[Editor] Applying correction at position:', sentenceStart, sentenceEnd);
-              editor.chain().focus()
-                .setTextSelection({ from: sentenceStart, to: sentenceEnd })
-                .setMark('highlight', { color: 'red' })
-                .run();
+              const correctedSentence = await checkGrammar(lastSentence);
               
-              setTimeout(() => {
-                editor.chain().focus()
-                  .setTextSelection({ from: sentenceStart, to: sentenceEnd })
-                  .deleteSelection()
-                  .insertContent(correctedSentence)
-                  .setMark('highlight', { color: 'green' })
-                  .run();
-                console.log('[Editor] Correction applied');
+              if (correctedSentence !== lastSentence) {
+                const sentencePos = currentContent.lastIndexOf(lastSentence);
+                if (sentencePos === -1) {
+                  isCorrectingRef.current = false;
+                  return;
+                }
+                
+                console.log('[Editor] Sentence position:', sentencePos);
+                
+                const originalWords = lastSentence.split(/\s+/);
+                const correctedWords = correctedSentence.split(/\s+/);
+                
+                console.log('[Editor] Original words:', originalWords);
+                console.log('[Editor] Corrected words:', correctedWords);
+                
+                const diffIndices = [];
+                for (let i = 0; i < Math.min(originalWords.length, correctedWords.length); i++) {
+                  if (originalWords[i] !== correctedWords[i]) {
+                    diffIndices.push(i);
+                  }
+                }
+                
+                // 마침표 중복 체크 및 제거
+                const finalSentence = lastSentence.endsWith('.') && correctedSentence.endsWith('.')
+                  ? correctedSentence.slice(0, -1)
+                  : correctedSentence;
+                
+                editor.commands.setTextSelection({
+                  from: sentencePos,
+                  to: sentencePos + lastSentence.length
+                });
+                
+                editor.commands.deleteSelection();
+                
+                editor.commands.insertContent(finalSentence);
+                
+                if (diffIndices.length > 0) {
+                  let wordPos = sentencePos;
+                  for (let i = 0; i < diffIndices[0]; i++) {
+                    wordPos += correctedWords[i].length + 1;
+                  }
+                  
+                  const changedWord = correctedWords[diffIndices[0]];
+                  console.log(`[Editor] Highlighting word: "${changedWord}" at position ${wordPos}`);
+                  
+                  editor.commands.setTextSelection({
+                    from: wordPos,
+                    to: wordPos + changedWord.length
+                  });
+                  
+                  editor.commands.setMark('highlight', { color: 'green' });
+                  
+                  setTimeout(() => {
+                    try {
+                      editor.commands.setTextSelection({
+                        from: wordPos,
+                        to: wordPos + changedWord.length
+                      });
+                      
+                      editor.commands.unsetMark('highlight');
+                      editor.commands.blur();
+                    } catch (err) {
+                      console.error('[Editor] Failed to remove highlight:', err);
+                    }
+                  }, 1000);
+                }
+                
+                correctedSentencesRef.current.add(finalSentence);
                 
                 setTimeout(() => {
-                  editor.chain().focus().unsetMark('highlight').run();
-                  console.log('[Editor] Highlight removed');
-                }, 2000);
-              }, 1000);
-            } else {
-              console.log('[Editor] No correction needed');
+                  isCorrectingRef.current = false;
+                }, 3000);
+              } else {
+                correctedSentencesRef.current.add(lastSentence);
+                isCorrectingRef.current = false;
+              }
+            } catch (error) {
+              console.error('[Editor] Grammar check failed:', error);
+              isCorrectingRef.current = false;
             }
-          } catch (error) {
-            console.error('[Editor] Grammar check failed:', error);
+          } else {
+            isCorrectingRef.current = false;
           }
-        }
+        }, 500);
       }
     },
     editorProps: {
@@ -116,7 +186,6 @@ export default function EmailContainer() {
   };
 
   const handleAttachImages = async (files: FileList) => {
-    // 이미지 처리 로직
     for (const file of Array.from(files)) {
       const reader = new FileReader();
       reader.onload = () => {
