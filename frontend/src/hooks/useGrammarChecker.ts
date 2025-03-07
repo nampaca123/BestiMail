@@ -6,26 +6,24 @@ export function useGrammarChecker(editor: Editor | null) {
   // Socket connection for real-time grammar checking
   const { checkGrammar } = useEmailSocket();
   
-  // Refs to manage state between renders and prevent redundant corrections
-  const lastSentenceRef = useRef<string>("");  // Stores the last processed sentence
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);  // Debounce timer for processing
-  const isCorrectingRef = useRef(false);  // Lock to prevent concurrent corrections
-  const lastCorrectionTimeRef = useRef<number>(0);  // Timestamp of last correction
-  const correctedSentencesRef = useRef<Set<string>>(new Set());  // Cache of already corrected sentences
-
+  // Essential refs for state management
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isCorrectingRef = useRef(false);
+  const lastCorrectionTimeRef = useRef<number>(0);
+  const correctedSentencesRef = useRef<Set<string>>(new Set());
+  
   const [isEnabled, setIsEnabled] = useState(true);
 
   const handleSentenceUpdate = async (currentContent: string) => {
     if (!editor || !isEnabled || isCorrectingRef.current) return;
     
     const now = Date.now();
-    if (now - lastCorrectionTimeRef.current < 1000) return;
+    if (now - lastCorrectionTimeRef.current < 1500) return;
     
-    // 마지막 문자 확인 부분
+    // 문장 끝 확인 로직 (현재 사용중)
     const lastChar = currentContent[currentContent.length - 1];
     const isSentenceEnder = ['.', '!', '?', '\n'].includes(lastChar);
     
-    // 문장 종결자가 있을 때만 처리
     if (isSentenceEnder) {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -38,121 +36,131 @@ export function useGrammarChecker(editor: Editor | null) {
           isCorrectingRef.current = true;
           lastCorrectionTimeRef.current = Date.now();
           
-          // 개선된 문장 추출 방식: 엔터 또는 문장 종결자로 나누고 마지막 부분 처리
-          let sentences = currentContent.split(/(?<=[.!?\n])/);
-          let lastSentence = sentences[sentences.length - 1].trim();
+          // 문장 추출 간소화
+          const sentences = currentContent.split(/(?<=[.!?\n])\s+/).filter(s => s.trim().length > 0);
           
-          // 빈 문장이면 마지막에서 두 번째 문장 시도
-          if (!lastSentence && sentences.length > 1) {
-            lastSentence = sentences[sentences.length - 2].trim();
+          if (sentences.length === 0) {
+            isCorrectingRef.current = false;
+            return;
           }
           
-          // 인사말/맺음말 등 스킵
-          if (!lastSentence || 
+          let lastSentence = sentences[sentences.length - 1].trim();
+          
+          // 문장 건너뛰기 조건 간소화
+          if (lastSentence.length < 5 || 
               /^(Dear|Hello|Hi|Hey|Sincerely|Best|Regards|Thank|Thanks)/i.test(lastSentence) ||
-              lastSentence === lastSentenceRef.current || 
               correctedSentencesRef.current.has(lastSentence)) {
             isCorrectingRef.current = false;
             return;
           }
           
-          lastSentenceRef.current = lastSentence;
-          
-          // 문법 교정 수행
+          // 문법 교정 요청
           const correctedSentence = await checkGrammar(lastSentence);
           
           if (correctedSentence !== lastSentence) {
-            // 마지막 문장의 위치를 정확히 찾기
-            const sentencePos = currentContent.lastIndexOf(lastSentence);
+            // 교정된 문장 위치 계산
+            const currentText = editor.getText();
+            let sentencePos = currentText.lastIndexOf(lastSentence);
+            
             if (sentencePos === -1) {
+              console.warn('Could not find sentence position');
               isCorrectingRef.current = false;
               return;
             }
-
-            // 문장 끝 부호 중복 방지
-            let finalSentence = correctedSentence;
-            if (lastSentence.endsWith('.') && correctedSentence.endsWith('.')) {
-              finalSentence = correctedSentence.slice(0, -1);
-            } else if (lastSentence.endsWith('!') && correctedSentence.endsWith('!')) {
-              finalSentence = correctedSentence.slice(0, -1);
-            } else if (lastSentence.endsWith('?') && correctedSentence.endsWith('?')) {
-              finalSentence = correctedSentence.slice(0, -1);
-            } else if (lastSentence.endsWith('\n') && correctedSentence.endsWith('\n')) {
-              finalSentence = correctedSentence.slice(0, -1);
+            
+            // 문장 전후 컨텍스트 확인 로직 추가
+            const beforeChar = sentencePos > 0 ? currentText[sentencePos - 1] : '';
+            const leadingSpaces = /^\s+/.exec(lastSentence)?.[0] || '';
+            
+            // 수정 - 더 정확한 위치 계산을 위해 공백 처리 수정
+            let leadingWhitespace = '';
+            if (leadingSpaces) {
+              leadingWhitespace = leadingSpaces;
+              lastSentence = lastSentence.trimStart();
+              sentencePos += leadingSpaces.length;
             }
             
-            // 문장 앞뒤의 공백 패턴 확인
-            let leadingSpace = '';
-            let trailingSpace = '';
-            
-            // 현재 문장 위치 기준 앞뒤 문자 확인
-            if (sentencePos > 0 && currentContent[sentencePos - 1] === ' ') {
-              leadingSpace = ' ';
-            }
-            
-            const endPos = sentencePos + lastSentence.length;
-            if (endPos < currentContent.length && currentContent[endPos] === ' ') {
-              trailingSpace = ' ';
-            }
-            
-            // 공백 패턴을 유지하며 텍스트 교체
-            editor.commands.setTextSelection({
-              from: sentencePos - (leadingSpace ? 1 : 0),
-              to: sentencePos + lastSentence.length + (trailingSpace ? 1 : 0)
-            });
-            editor.commands.deleteSelection();
-            editor.commands.insertContent(leadingSpace + finalSentence + trailingSpace);
-            
-            // Highlight the differences between original and corrected text
-            const originalWords = lastSentence.split(/\s+/);
-            const correctedWords = finalSentence.split(/\s+/);
-            
-            // Find words that were changed
-            const diffIndices = [];
-            for (let i = 0; i < Math.min(originalWords.length, correctedWords.length); i++) {
-              if (originalWords[i] !== correctedWords[i]) {
-                diffIndices.push(i);
-              }
-            }
-            
-            if (diffIndices.length > 0) {
-              // Calculate position of the changed word in the text
-              let wordPos = sentencePos;
-              for (let i = 0; i < diffIndices[0]; i++) {
-                wordPos += correctedWords[i].length + 1;
-              }
+            try {
+              let finalSentence = correctedSentence;
               
-              const changedWord = correctedWords[diffIndices[0]];
+              // 중복된 마침표 방지
+              if (lastSentence.endsWith('.') && correctedSentence.endsWith('.')) {
+                finalSentence = correctedSentence.slice(0, -1);
+              } // 다른 punctuation 처리 유사하게 유지
               
-              // Select and highlight the corrected word in green
-              editor.commands.setTextSelection({
-                from: wordPos,
-                to: wordPos + changedWord.length
-              });
-              editor.commands.setMark('highlight', { color: 'green' });
+              // 수정 - 정확한 교체 위치 사용
+              const replacementText = finalSentence;
               
-              // Remove highlight after 1 second
-              setTimeout(() => {
-                try {
-                  editor.commands.setTextSelection({
-                    from: wordPos,
-                    to: wordPos + changedWord.length
-                  });
-                  editor.commands.unsetMark('highlight');
-                  editor.commands.blur();
-                } catch (err) {
-                  console.error('[Editor] Failed to remove highlight:', err);
+              // 수정 - 정확한 교체 범위 사용 (이전 문장 마침표를 포함하지 않도록)
+              const transaction = editor.state.tr.replaceWith(
+                sentencePos,
+                sentencePos + lastSentence.length,
+                editor.schema.text(replacementText)
+              );
+              
+              // 단어 비교 로직 (실제 교정된 단어만 하이라이트)
+              const originalWords = lastSentence.split(/\s+/);
+              const correctedWords = correctedSentence.split(/\s+/);
+              
+              const changedWordIndices = [];
+              for (let i = 0; i < Math.min(originalWords.length, correctedWords.length); i++) {
+                if (originalWords[i] !== correctedWords[i]) {
+                  changedWordIndices.push(i);
                 }
-              }, 1000);
+              }
+              
+              if (changedWordIndices.length > 0 && editor.schema.marks.highlight) {
+                // 교체 먼저 실행
+                editor.view.dispatch(transaction);
+                
+                // 변경된 단어만 하이라이트
+                for (const wordIndex of changedWordIndices) {
+                  let wordPos = sentencePos + leadingWhitespace.length;
+                  for (let i = 0; i < wordIndex; i++) {
+                    wordPos += correctedWords[i].length + 1;
+                  }
+                  
+                  const changedWord = correctedWords[wordIndex];
+                  const highlightTransaction = editor.state.tr.addMark(
+                    wordPos,
+                    wordPos + changedWord.length,
+                    editor.schema.marks.highlight.create({ color: '#C2E0C1' })
+                  );
+                  
+                  editor.view.dispatch(highlightTransaction);
+                  
+                  // 1초 후 하이라이트 제거
+                  setTimeout(() => {
+                    if (editor && editor.isDestroyed !== true) {
+                      editor.view.dispatch(
+                        editor.state.tr.removeMark(
+                          wordPos,
+                          wordPos + changedWord.length,
+                          editor.schema.marks.highlight
+                        )
+                      );
+                    }
+                  }, 1000);
+                }
+              } else {
+                editor.view.dispatch(transaction);
+              }
+              
+              // 교정된 문장 캐시에 추가
+              correctedSentencesRef.current.add(correctedSentence);
+            } catch (error) {
+              console.error('[Editor] Text replacement failed:', error);
             }
           }
-          correctedSentencesRef.current.add(correctedSentence);
         } catch (error) {
           console.error('[Editor] Grammar check failed:', error);
         } finally {
-          isCorrectingRef.current = false;
+          // 잠금 해제 지연
+          setTimeout(() => {
+            isCorrectingRef.current = false;
+          }, 200);
         }
-      }, 500);
+      }, 700);
     }
   };
 
