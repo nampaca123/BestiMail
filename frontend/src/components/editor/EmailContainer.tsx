@@ -53,7 +53,7 @@ export default function EmailContainer() {
       }),
     ],
     content: '',
-    // Real-time grammar checking on content updates
+    // Real-time grammar checking on content updates!
     onUpdate: ({ editor }) => {
       if (!editor) return;
       handleSentenceUpdate(editor.state.doc.textContent);
