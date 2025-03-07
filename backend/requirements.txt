@@ -1,9 +1,9 @@
 flask
 flask-socketio
-redis
 happytransformer
 python-dotenv
 sendgrid
 openai
 flask-cors
 eventlet
+gunicorn

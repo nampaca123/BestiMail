@@ -1,9 +1,11 @@
 from flask_socketio import emit
 from app.services.grammar_service import GrammarService
 from app.services.openai_service import OpenAIService
+from app.services.email_service import EmailService
 
 grammar_service = GrammarService()
 openai_service = OpenAIService()
+email_service = EmailService()
 
 def init_handlers(socketio):
     @socketio.on('connect')
@@ -17,7 +19,7 @@ def init_handlers(socketio):
     @socketio.on('check_grammar')
     def handle_grammar_check(data):
         """
-        실시간 문법 교정을 처리하는 핸들러
+        Handle real-time grammar correction
         """
         from flask import current_app
         
@@ -31,11 +33,11 @@ def init_handlers(socketio):
             return
         
         try:
-            # 문법 교정 서비스 호출
+            # Call grammar correction service
             corrected_text = grammar_service.correct_grammar(text)
             current_app.logger.info(f"[Handler] Sending correction: '{corrected_text}'")
             
-            # 교정 전후 단어 비교 로그 추가
+            # Add word comparison log for before and after correction
             original_words = text.split()
             corrected_words = corrected_text.split()
             
@@ -51,8 +53,21 @@ def init_handlers(socketio):
     @socketio.on('formalize')
     def handle_formalize(data):
         """
-        OpenAI를 사용해 이메일을 공식적인 톤으로 변환
+        Convert email to formal tone using OpenAI
         """
         text = data.get('text', '')
         formalized = openai_service.formalize_text(text)
-        emit('formalize_result', {'formalized_text': formalized}) 
+        emit('formalize_result', {'formalized_text': formalized})
+
+    @socketio.on('send_email')
+    def handle_send_email(data):
+        """
+        Send email using SendGrid
+        """
+        to_email = data.get('to')
+        cc_email = data.get('cc')
+        subject = data.get('subject')
+        content = data.get('content')
+        
+        success = email_service.send_email(to_email, cc_email, subject, content)
+        emit('email_result', {'success': success}) 

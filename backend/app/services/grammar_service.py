@@ -1,7 +1,7 @@
 from happytransformer import HappyTextToText, TTSettings
 import logging
 
-# 로거 설정
+# logger setup
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -13,14 +13,14 @@ class GrammarService:
         logger.info("GrammarService initialized successfully")
     
     def correct_grammar(self, text: str) -> str:
-        """실시간 문법 교정"""
+        """Real-time grammar correction"""
         if not text or not isinstance(text, str):
             logger.warning(f"Invalid input: {type(text)}")
             return text
             
         logger.info(f"Starting grammar correction for text: {text}")
         
-        # 문장이 마침표, 느낌표, 물음표로 끝나는지 확인
+        # Check if the sentence ends with sentence punctuation
         if not any(text.strip().endswith(punct) for punct in ['.', '!', '?']):
             logger.debug("Text does not end with sentence punctuation, skipping correction")
             return text

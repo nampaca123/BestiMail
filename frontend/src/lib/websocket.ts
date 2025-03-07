@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, createElement, type Rea
 import { io, Socket } from 'socket.io-client';
 import { WebSocketState } from '@/types/websocketInterface';
 
-// Context 생성
+// Context generation
 const WebSocketContext = createContext<WebSocketState>({
   socket: null,
   isConnected: false,
@@ -14,7 +14,6 @@ const WebSocketContext = createContext<WebSocketState>({
   sendEmail: () => Promise.reject('WebSocket not initialized'),
 });
 
-// Provider 컴포넌트
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -48,7 +47,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     return () => { socketInstance.disconnect(); };
   }, []);
 
-  // 이메일 관련 WebSocket 메서드들
+  // Email-related WebSocket methods
   const checkGrammar = async (text: string): Promise<string> => {
     if (!socket || !isConnected) throw new Error('WebSocket not connected');
     
@@ -83,12 +82,12 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const sendEmail = async (to: string, subject: string, content: string): Promise<boolean> => {
+  const sendEmail = async (to: string, cc: string, subject: string, content: string): Promise<boolean> => {
     if (!socket || !isConnected) throw new Error('WebSocket not connected');
     
     setIsLoading(true);
     return new Promise((resolve, reject) => {
-      socket.emit('send_email', { to, subject, content });
+      socket.emit('send_email', { to, cc, subject, content });
       socket.once('email_result', (data) => {
         setIsLoading(false);
         resolve(data.success);
@@ -116,5 +115,4 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// 훅 사용을 위한 export
 export const useEmailSocket = () => useContext(WebSocketContext); 

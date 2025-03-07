@@ -6,5 +6,5 @@ export interface WebSocketState {
   isLoading: boolean;
   checkGrammar: (text: string) => Promise<string>;
   formalizeText: (text: string) => Promise<string>;
-  sendEmail: (to: string, subject: string, content: string) => Promise<boolean>;
+  sendEmail: (to: string, cc: string, subject: string, content: string) => Promise<boolean>;
 } 
