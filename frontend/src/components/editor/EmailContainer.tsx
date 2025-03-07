@@ -68,7 +68,11 @@ export default function EmailContainer() {
   });
 
   // Initialize grammar checker with the editor instance
-  const { handleSentenceUpdate } = useGrammarChecker(editor);
+  const { 
+    handleSentenceUpdate, 
+    isEnabled: isGrammarEnabled, 
+    setIsEnabled: setGrammarEnabled 
+  } = useGrammarChecker(editor);
 
   const handleAttachFiles = (files: FileList) => {
     const newFiles = Array.from(files).map(file => ({
@@ -109,6 +113,8 @@ export default function EmailContainer() {
             editor={editor} 
             onAttachFiles={handleAttachFiles}
             onAttachImages={handleAttachImages}
+            isGrammarEnabled={isGrammarEnabled}
+            onToggleGrammar={setGrammarEnabled}
           />
           <EmailBody editor={editor} attachedFiles={attachedFiles} />
           <ActionButtons editor={editor} headerData={headerData} sendEmail={sendEmail} />

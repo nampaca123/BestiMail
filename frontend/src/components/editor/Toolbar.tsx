@@ -1,7 +1,13 @@
 'use client';
 
 import { useRef, ChangeEvent } from 'react';
-import { ToolbarProps, ToolbarButtonProps } from '@/types/email';
+import { EmailToolbarProps, ToolbarButtonProps } from '@/types/email';
+import { 
+  Bold, Italic, Underline, 
+  AlignLeft, AlignCenter, AlignRight,
+  List, ListOrdered,
+  SpellCheck
+} from 'lucide-react';
 
 const ToolbarButton = ({ icon, command, isActive }: ToolbarButtonProps) => (
   <button
@@ -20,7 +26,13 @@ const ToolbarGroup = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-export default function Toolbar({ editor, onAttachFiles, onAttachImages }: ToolbarProps) {
+export default function Toolbar({ 
+  editor, 
+  onAttachFiles, 
+  onAttachImages,
+  isGrammarEnabled,
+  onToggleGrammar
+}: EmailToolbarProps) {
   const attachFileInput = useRef<HTMLInputElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
 
@@ -51,52 +63,60 @@ export default function Toolbar({ editor, onAttachFiles, onAttachImages }: Toolb
   return (
     <div className="flex items-center p-2 border-b border-gray-200 bg-white">
       <ToolbarGroup>
-        <ToolbarButton 
-          icon="format_bold" 
-          command={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive('bold')}
-        />
-        <ToolbarButton 
-          icon="format_italic" 
-          command={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive('italic')}
-        />
-        <ToolbarButton 
-          icon="format_underlined" 
-          command={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={editor.isActive('underline')}
-        />
+        <button
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={`p-1 ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
+        >
+          <Bold size={20} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className={`p-1 ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
+        >
+          <Italic size={20} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={`p-1 ${editor.isActive('underline') ? 'bg-gray-200' : ''}`}
+        >
+          <Underline size={20} />
+        </button>
       </ToolbarGroup>
       
       <ToolbarGroup>
-        <ToolbarButton 
-          icon="format_align_left" 
-          command={() => editor.chain().focus().setTextAlign('left').run()}
-          isActive={editor.isActive({ textAlign: 'left' })}
-        />
-        <ToolbarButton 
-          icon="format_align_center" 
-          command={() => editor.chain().focus().setTextAlign('center').run()}
-          isActive={editor.isActive({ textAlign: 'center' })}
-        />
-        <ToolbarButton 
-          icon="format_align_right" 
-          command={() => editor.chain().focus().setTextAlign('right').run()}
-          isActive={editor.isActive({ textAlign: 'right' })}
-        />
+        <button
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          className={`p-1 ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}`}
+        >
+          <AlignLeft size={20} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          className={`p-1 ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}`}
+        >
+          <AlignCenter size={20} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          className={`p-1 ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}`}
+        >
+          <AlignRight size={20} />
+        </button>
       </ToolbarGroup>
       
       <ToolbarGroup>
-        <ToolbarButton 
-          icon="format_list_bulleted" 
-          command={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive('bulletList')}
-        />
-        <ToolbarButton 
-          icon="format_list_numbered" 
-          command={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive('orderedList')}
-        />
+        <button
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={`p-1 ${editor.isActive('bulletList') ? 'bg-gray-200' : ''}`}
+        >
+          <List size={20} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={`p-1 ${editor.isActive('orderedList') ? 'bg-gray-200' : ''}`}
+        >
+          <ListOrdered size={20} />
+        </button>
       </ToolbarGroup>
       
       <ToolbarGroup>
@@ -129,6 +149,23 @@ export default function Toolbar({ editor, onAttachFiles, onAttachImages }: Toolb
         >
           <span className="material-icons">image</span>
           <span>Images</span>
+        </button>
+      </ToolbarGroup>
+      
+      <ToolbarGroup>
+        <button
+          onClick={() => onToggleGrammar(!isGrammarEnabled)}
+          className={`
+            flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors whitespace-nowrap
+            ${isGrammarEnabled 
+              ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
+              : 'text-gray-600 hover:bg-secondary'
+            }
+          `}
+          title={`${isGrammarEnabled ? 'Disable' : 'Enable'} automatic grammar correction`}
+        >
+          <SpellCheck size={18} className={isGrammarEnabled ? 'text-blue-600' : 'text-gray-600'} />
+          <span className="text-sm font-medium">Auto-Correct</span>
         </button>
       </ToolbarGroup>
     </div>

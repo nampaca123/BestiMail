@@ -21,10 +21,12 @@ export interface EmailBodyProps {
   attachedFiles: AttachedFile[];
 }
 
-export interface ToolbarProps {
+export interface EmailToolbarProps {
   editor: Editor | null;
   onAttachFiles: (files: FileList) => void;
   onAttachImages: (files: FileList) => void;
+  isGrammarEnabled: boolean;
+  onToggleGrammar: (enabled: boolean) => void;
 }
 
 export interface EmailActionButtonProps {
@@ -50,7 +52,7 @@ export interface InputFieldProps {
 }
 
 export interface ToolbarButtonProps {
-  icon: string;
+  icon: React.ReactNode;
   command: () => void;
   isActive?: boolean;
 } 
