@@ -12,7 +12,6 @@ Additionally, when the user clicks the 'Overall Fix' button, the full email cont
 
 Flask (WebSocket)
 SendGrid
-Redis
 OpenAI
 React (Next.js, TailwindCSS)
 Docker
@@ -21,3 +20,13 @@ Swagger UI
 ## AI Model
 vennify/t5-base-grammar-correction ('https://huggingface.co/vennify/t5-base-grammar-correction')
 OpenAI GPT 4o's API
+
+## Running the Application
+
+You can run the application using Docker Compose:
+
+```bash
+docker-compose up
+```
+
+After starting the containers, you can access the application at http://localhost:3000.
