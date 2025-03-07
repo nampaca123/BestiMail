@@ -20,7 +20,7 @@ export function useGrammarChecker(editor: Editor | null) {
     const now = Date.now();
     if (now - lastCorrectionTimeRef.current < 1500) return;
     
-    // 문장 끝 확인 로직 (현재 사용중)
+    // Check if the sentence ends
     const lastChar = currentContent[currentContent.length - 1];
     const isSentenceEnder = ['.', '!', '?', '\n'].includes(lastChar);
     
@@ -36,7 +36,7 @@ export function useGrammarChecker(editor: Editor | null) {
           isCorrectingRef.current = true;
           lastCorrectionTimeRef.current = Date.now();
           
-          // 문장 추출 간소화
+          // Extract sentences
           const sentences = currentContent.split(/(?<=[.!?\n])\s+/).filter(s => s.trim().length > 0);
           
           if (sentences.length === 0) {
@@ -46,7 +46,7 @@ export function useGrammarChecker(editor: Editor | null) {
           
           let lastSentence = sentences[sentences.length - 1].trim();
           
-          // 문장 건너뛰기 조건 간소화
+          // Skip short sentences, common greetings, and already corrected sentences
           if (lastSentence.length < 5 || 
               /^(Dear|Hello|Hi|Hey|Sincerely|Best|Regards|Thank|Thanks)/i.test(lastSentence) ||
               correctedSentencesRef.current.has(lastSentence)) {
@@ -54,51 +54,88 @@ export function useGrammarChecker(editor: Editor | null) {
             return;
           }
           
-          // 문법 교정 요청
+          // Request grammar correction
           const correctedSentence = await checkGrammar(lastSentence);
           
           if (correctedSentence !== lastSentence) {
-            // 교정된 문장 위치 계산
+            console.log(`Grammar correction: "${lastSentence}" -> "${correctedSentence}"`);
+            
+            // Current text state
             const currentText = editor.getText();
-            let sentencePos = currentText.lastIndexOf(lastSentence);
+            
+            // Sentence position improvement
+            const trimmedSentence = lastSentence.trim();
+            let sentencePos = currentText.lastIndexOf(trimmedSentence);
+            
+            // If the exact position cannot be found, try a more accurate search
+            if (sentencePos === -1) {
+              // Search within the last 50-100 characters (performance improvement and accuracy improvement)
+              const searchStart = Math.max(0, currentText.length - Math.max(100, trimmedSentence.length * 2));
+              const textToSearch = currentText.substring(searchStart);
+              
+              // Find the exact text match
+              for (let i = 0; i <= textToSearch.length - trimmedSentence.length; i++) {
+                if (textToSearch.substring(i, i + trimmedSentence.length) === trimmedSentence) {
+                  sentencePos = searchStart + i;
+                  break;
+                }
+              }
+              
+              // If still not found, try searching word by word
+              if (sentencePos === -1) {
+                const words = trimmedSentence.split(/\s+/);
+                for (let i = words.length - 1; i >= Math.ceil(words.length / 2); i--) {
+                  const partialSentence = words.slice(0, i).join(' ');
+                  if (partialSentence.length > 10) {
+                    const partialPos = currentText.lastIndexOf(partialSentence);
+                    if (partialPos !== -1) {
+                      sentencePos = partialPos;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+            
+            console.log(`Found sentence at position: ${sentencePos}`);
             
             if (sentencePos === -1) {
-              console.warn('Could not find sentence position');
+              console.warn('Could not find sentence position for: ', trimmedSentence);
               isCorrectingRef.current = false;
               return;
             }
             
-            // 문장 전후 컨텍스트 확인 로직 추가
-            const beforeChar = sentencePos > 0 ? currentText[sentencePos - 1] : '';
-            const leadingSpaces = /^\s+/.exec(lastSentence)?.[0] || '';
-            
-            // 수정 - 더 정확한 위치 계산을 위해 공백 처리 수정
-            let leadingWhitespace = '';
-            if (leadingSpaces) {
-              leadingWhitespace = leadingSpaces;
-              lastSentence = lastSentence.trimStart();
-              sentencePos += leadingSpaces.length;
-            }
-            
             try {
+              // Prevent duplicate periods
               let finalSentence = correctedSentence;
-              
-              // 중복된 마침표 방지
-              if (lastSentence.endsWith('.') && correctedSentence.endsWith('.')) {
+              if (trimmedSentence.endsWith('.') && correctedSentence.endsWith('.')) {
                 finalSentence = correctedSentence.slice(0, -1);
-              } // 다른 punctuation 처리 유사하게 유지
+              }
               
-              // 수정 - 정확한 교체 위치 사용
-              const replacementText = finalSentence;
+              // Space addition logic improvement
+              if (sentencePos > 0) {
+                const prevChar = currentText[sentencePos - 1];
+                if (['.', '!', '?'].includes(prevChar) && 
+                    !finalSentence.startsWith(' ') &&
+                    /^[A-Z]/.test(finalSentence)) {
+                  finalSentence = ' ' + finalSentence;
+                }
+              }
               
-              // 수정 - 정확한 교체 범위 사용 (이전 문장 마침표를 포함하지 않도록)
+              // Set the replacement range and text
+              const startPos = sentencePos;
+              const endPos = sentencePos + trimmedSentence.length;
+              
+              console.log(`Replacing text: [${startPos}, ${endPos}] "${currentText.substring(startPos, endPos)}" -> "${finalSentence}"`);
+              
+              // Replace with the corrected sentence
               const transaction = editor.state.tr.replaceWith(
-                sentencePos,
-                sentencePos + lastSentence.length,
-                editor.schema.text(replacementText)
+                startPos,
+                endPos,
+                editor.schema.text(finalSentence)
               );
               
-              // 단어 비교 로직 (실제 교정된 단어만 하이라이트)
+              // Word comparison logic (highlight only the actually corrected words)
               const originalWords = lastSentence.split(/\s+/);
               const correctedWords = correctedSentence.split(/\s+/);
               
@@ -110,12 +147,12 @@ export function useGrammarChecker(editor: Editor | null) {
               }
               
               if (changedWordIndices.length > 0 && editor.schema.marks.highlight) {
-                // 교체 먼저 실행
+                // Replace first
                 editor.view.dispatch(transaction);
                 
-                // 변경된 단어만 하이라이트
+                // Highlight only the actually corrected words
                 for (const wordIndex of changedWordIndices) {
-                  let wordPos = sentencePos + leadingWhitespace.length;
+                  let wordPos = sentencePos;
                   for (let i = 0; i < wordIndex; i++) {
                     wordPos += correctedWords[i].length + 1;
                   }
@@ -129,7 +166,7 @@ export function useGrammarChecker(editor: Editor | null) {
                   
                   editor.view.dispatch(highlightTransaction);
                   
-                  // 1초 후 하이라이트 제거
+                  // Remove highlight after 1 second
                   setTimeout(() => {
                     if (editor && editor.isDestroyed !== true) {
                       editor.view.dispatch(
@@ -146,7 +183,7 @@ export function useGrammarChecker(editor: Editor | null) {
                 editor.view.dispatch(transaction);
               }
               
-              // 교정된 문장 캐시에 추가
+              // Add the corrected sentence to the cache
               correctedSentencesRef.current.add(correctedSentence);
             } catch (error) {
               console.error('[Editor] Text replacement failed:', error);
@@ -155,7 +192,7 @@ export function useGrammarChecker(editor: Editor | null) {
         } catch (error) {
           console.error('[Editor] Grammar check failed:', error);
         } finally {
-          // 잠금 해제 지연
+          // Unlock after 200ms
           setTimeout(() => {
             isCorrectingRef.current = false;
           }, 200);
