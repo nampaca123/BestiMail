@@ -144,7 +144,9 @@ export function useGrammarChecker(editor: Editor | null) {
               let finalSentence = correctedSentence;
               
               // Prevent duplicate periods
-              if (trimmedSentence.endsWith('.') && correctedSentence.endsWith('.')) {
+              if ((trimmedSentence.endsWith('.') && correctedSentence.endsWith('.')) ||
+                  (trimmedSentence.endsWith('!') && correctedSentence.endsWith('!')) ||
+                  (trimmedSentence.endsWith('?') && correctedSentence.endsWith('?'))) {
                 finalSentence = correctedSentence.slice(0, -1);
               }
               
